@@ -2,18 +2,15 @@
   Demonstrate turns
 */
 #include "turnFunctions2.h"
+#include "constants.h"
 
 
-#define IN1 0
-#define IN2 4
 
-#define IN3 18
-#define IN4 5
 
 
 // use first channel of 16 channels (started from zero)
-#define LEDC_CHANNEL_0     0
-#define LEDC_CHANNEL_1     1
+#define LEDC_CHANNEL_0     9
+#define LEDC_CHANNEL_1     10
 
 // use 13 bit precission for LEDC timer
 #define LEDC_TIMER_13_BIT  13
@@ -23,7 +20,7 @@
 
 // fade LED PIN (replace with LED_BUILTIN constant for built-in LED)
 #define LED_PIN            2
-#define ENB     19
+
 
 int brightness = 0;    // how bright the LED is
 int fadeAmount = 5;    // how many points to fade the LED by
@@ -35,22 +32,21 @@ void ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax) {
   uint32_t duty = (8191 / valueMax) * min(value, valueMax);
 
   // write duty to LEDC
-  ledcWrite(channel, duty);
+  analogWrite(channel, value);
 }
 
 void setup() {
+   Serial.begin(9600);
+
   // Setup timer and attach timer to a led pin
-  ledcSetup(LEDC_CHANNEL_0, LEDC_BASE_FREQ, LEDC_TIMER_13_BIT);
-  ledcAttachPin(LED_PIN, LEDC_CHANNEL_0);
-
-  ledcSetup(LEDC_CHANNEL_1, LEDC_BASE_FREQ, LEDC_TIMER_13_BIT);
-  ledcAttachPin(ENB, LEDC_CHANNEL_1);
+  pinMode(ENA, OUTPUT);
+  pinMode(ENB, OUTPUT);
 
 
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
-  digitalWrite(IN3, LOW);
-  digitalWrite(IN4, HIGH);
 }
 
 int speed = 255;
@@ -59,46 +55,26 @@ void loop() {
   // set the brightness on LEDC channel 0
 
   //moving the motors forward
-  moveForward(10, 150);
-  turnLeft(90, 175);
-  delay(1000);
-  moveForward(5, 150);
-  turnRight(90, 100);
-  delay(1000);
+  Serial.println("MOVING FORWARD");
+  moveForward(1000, 1000);
+  
+  delay(2000);
+  Serial.println("Stopped");
+  moveForward(10, 0);
+  Serial.println("Left...");
+  turnLeft(100,1000);
+  delay(2000);
+  Serial.println("Right");
+  turnRight(100,1000);
+  delay(2000);
+
+
 
   
 
 }
 
 void moveForward(int steps, int mspeed){
-  int counter1 = 0;
-  int counter2 = 0;
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
-
-  digitalWrite(IN3, HIGH);
-  digitalWrite(IN4, LOW);
-  while (steps > counter1 && steps > counter2) {
-    if (steps > counter1) {
-      ledcAnalogWrite(LEDC_CHANNEL_0, mspeed);
-    }
-    else {
-      ledcAnalogWrite(LEDC_CHANNEL_0, 0);
-    }
-    if (steps > counter2) {
-      ledcAnalogWrite(LEDC_CHANNEL_1, mspeed);
-    }
-    else {
-      ledcAnalogWrite(LEDC_CHANNEL_1, 0);
-    }
-  }
-  ledcAnalogWrite(LEDC_CHANNEL_0, 0);
-  ledcAnalogWrite(LEDC_CHANNEL_1, 0);
-  counter1 = 0;
-  counter2 = 0;
-}
-
-void turnLeft(int steps, int mspeed) {
   int counter1 = 0;
   int counter2 = 0;
   digitalWrite(IN1, LOW);
@@ -119,6 +95,40 @@ void turnLeft(int steps, int mspeed) {
     else {
       ledcAnalogWrite(LEDC_CHANNEL_1, 0);
     }
+    counter1++;
+    counter2++;
+    delay(10);
+  }
+  ledcAnalogWrite(LEDC_CHANNEL_0, 0);
+  ledcAnalogWrite(LEDC_CHANNEL_1, 0);
+  counter1 = 0;
+  counter2 = 0;
+}
+
+void turnLeft(int steps, int mspeed) {
+  int counter1 = 0;
+  int counter2 = 0;
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+  while (steps > counter1 && steps > counter2) {
+    if (steps > counter1) {
+      ledcAnalogWrite(LEDC_CHANNEL_0, mspeed);
+    }
+    else {
+      ledcAnalogWrite(LEDC_CHANNEL_0, 0);
+    }
+    if (steps > counter2) {
+      ledcAnalogWrite(LEDC_CHANNEL_1, mspeed);
+    }
+    else {
+      ledcAnalogWrite(LEDC_CHANNEL_1, 0);
+    }
+    counter1++;
+    counter2++;
+    delay(10);
   }
   ledcAnalogWrite(LEDC_CHANNEL_0, 0);
   ledcAnalogWrite(LEDC_CHANNEL_1, 0);
@@ -129,8 +139,8 @@ void turnLeft(int steps, int mspeed) {
 void turnRight(int steps, int mspeed) {
   int counter1 = 0;
   int counter2 = 0;
-  digitalWrite(IN1, HIGH);
-  digitalWrite(IN2, LOW);
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
 
   digitalWrite(IN3, LOW);
   digitalWrite(IN4, HIGH);
@@ -147,6 +157,9 @@ void turnRight(int steps, int mspeed) {
     else {
       ledcAnalogWrite(LEDC_CHANNEL_1, 0);
     }
+    counter1++;
+    counter2++;
+    delay(10);
   }
   ledcAnalogWrite(LEDC_CHANNEL_0, 0);
   ledcAnalogWrite(LEDC_CHANNEL_1, 0);
