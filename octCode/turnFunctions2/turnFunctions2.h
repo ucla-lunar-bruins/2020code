@@ -1,5 +1,9 @@
 #include <Arduino.h> 
 
+#ifdef ESP_H
+#include <cstdint>
+#endif
+
 void moveForward(int steps, int mspeed);
 void turnLeft(int steps, int mspeed);
 void turnRight(int steps, int mspeed);
