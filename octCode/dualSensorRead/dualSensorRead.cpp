@@ -9,7 +9,12 @@
 //Adafruit_VL53L0X lox1 = Adafruit_VL53L0X();
 //Adafruit_VL53L0X lox2 = Adafruit_VL53L0X();
 
-void setID(Adafruit_VL53L0X& lox1, Adafruit_VL53L0X& lox2) {
+
+ProximityService::ProximityService() {
+  this->nSensors = 0;
+}
+
+void ProximityService::setID(Adafruit_VL53L0X& lox1, Adafruit_VL53L0X& lox2) {
     // all reset
     digitalWrite(SHT_LOX1, LOW);    
     digitalWrite(SHT_LOX2, LOW);
@@ -50,7 +55,7 @@ void setID(Adafruit_VL53L0X& lox1, Adafruit_VL53L0X& lox2) {
       Initialize sensor #2 with lox.begin(new_i2c_address) Pick any number but 0x29 and whatever you set the first sensor to
    */
   
-void initSensors(Adafruit_VL53L0X& lox1, Adafruit_VL53L0X& lox2){
+void ProximityService::initSensors(Adafruit_VL53L0X& lox1, Adafruit_VL53L0X& lox2){
 
 
     Serial.begin(115200);
@@ -74,10 +79,7 @@ void initSensors(Adafruit_VL53L0X& lox1, Adafruit_VL53L0X& lox2){
 	}
 
 
-VL53L0X_RangingMeasurementData_t measure;
-
-
-int readSensor(Adafruit_VL53L0X& lox) {
+int ProximityService::readSensor(Adafruit_VL53L0X& lox) {
 	 int sensor = 0;
   
     lox.rangingTest(&measure, false); // pass in 'true' to get debug data printout!
