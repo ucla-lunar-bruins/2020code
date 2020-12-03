@@ -3,16 +3,21 @@
 #include "constants.h"
 
 
-Adafruit_VL53L0X lox1, lox2;
+Adafruit_VL53L0X leftSensor, rightSensor;
+ProximityService ps;
+
 
 void setup() {
 
-  initSensors(lox1,lox2);
+  ps.addSensor(leftSensor, SHT_LOX1,  LOX1_ADDRESS);
+  ps.addSensor(rightSensor, SHT_LOX2, LOX2_ADDRESS);
+  ps.initSensors();
 }
 
 void loop() {
 
-  Serial.println(readSensor(lox1));
+  Serial.println(ps.readSensor(leftSensor));
+  //Serial.println(ps.readSensor(rightSensor));
   delay(10);
   
 }

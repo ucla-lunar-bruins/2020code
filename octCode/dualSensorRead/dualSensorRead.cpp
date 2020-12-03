@@ -14,36 +14,36 @@ ProximityService::ProximityService() {
   this->nSensors = 0;
 }
 
-void ProximityService::setID(Adafruit_VL53L0X& lox1, Adafruit_VL53L0X& lox2) {
+void ProximityService::writeAll(uint8_t value) {
+for (int i = 0; i < nSensors; i++) {
+      digitalWrite(this->sensor_list[i].sdpin, value);    
+    } 
+}
+
+void ProximityService::setID(uint8_t index) {
     // all reset
-    digitalWrite(SHT_LOX1, LOW);    
-    digitalWrite(SHT_LOX2, LOW);
+
+    this->writeAll(LOW);
+    
     delay(10);
     // all unreset
-    digitalWrite(SHT_LOX1, HIGH);
-    digitalWrite(SHT_LOX2, HIGH);
+    this->writeAll(HIGH);
     delay(10);
 
-    // activating LOX1 and reseting LOX2
-    digitalWrite(SHT_LOX1, HIGH);
-    digitalWrite(SHT_LOX2, LOW);
+    this->writeAll(LOW);
 
-    // initing LOX1
-    if(!lox1.begin(LOX1_ADDRESS)) {
-      Serial.println(F("Failed to boot first VL53L0X"));
+    digitalWrite(this->sensor_list[index].sdpin, HIGH);
+    if(this->sensor_list[index].sensor->begin(LOX1_ADDRESS)) {
+      Serial.print(F("F2B"));
+      Serial.println(index);
       while(1);
     }
-    delay(10);
+}
 
-    // activating LOX2
-    digitalWrite(SHT_LOX2, HIGH);
-    delay(10);
 
-    //initing LOX2
-    if(!lox2.begin(LOX2_ADDRESS)) {
-      Serial.println(F("Failed to boot second VL53L0X"));
-      while(1);
-  }
+void ProximityService::addSensor(Adafruit_VL53L0X& lox1,  uint8_t sdpin, uint8_t address) {
+  this->sensor_list[this->nSensors] = {sdpin, address,&lox1};
+  this->nSensors++;
 }
 
 /*
@@ -55,32 +55,26 @@ void ProximityService::setID(Adafruit_VL53L0X& lox1, Adafruit_VL53L0X& lox2) {
       Initialize sensor #2 with lox.begin(new_i2c_address) Pick any number but 0x29 and whatever you set the first sensor to
    */
   
-void ProximityService::initSensors(Adafruit_VL53L0X& lox1, Adafruit_VL53L0X& lox2){
-
-
+void ProximityService::initSensors(){
     Serial.begin(115200);
 
     // wait until serial port opens for native USB devices
     while (! Serial) { delay(1); }
 
-    pinMode(SHT_LOX1, OUTPUT);
-    pinMode(SHT_LOX2, OUTPUT);
+    for (int8_t i = 0; i < this->nSensors; i++) {
+        pinMode(this->sensor_list[i].sdpin, OUTPUT);
+        digitalWrite(SHT_LOX1, LOW);
 
-    Serial.println("Shutdown pins inited...");
-
-    digitalWrite(SHT_LOX1, LOW);
-    digitalWrite(SHT_LOX2, LOW);
-
-    Serial.println("Both in reset mode...(pins are low)");
-    
-    
+    }
     Serial.println("Starting...");
-    setID(lox1,lox2);
+    for (int8_t i = 0; i < this-nSensors; i++) {
+      setID(i);
+    }
 	}
 
 
 int ProximityService::readSensor(Adafruit_VL53L0X& lox) {
-	 int sensor = 0;
+	 int8_t sensor = 0;
   
     lox.rangingTest(&measure, false); // pass in 'true' to get debug data printout!
   
@@ -88,13 +82,11 @@ int ProximityService::readSensor(Adafruit_VL53L0X& lox) {
     Serial.print("1: ");
     if(measure.RangeStatus != 4) {     // if not out of range
       sensor = measure.RangeMilliMeter;    
-      Serial.print(sensor);
-      Serial.print("mm");  
       return sensor;  
     } 
 
     else {
-      Serial.print("Out of range");
+      Serial.print("OOR");
       return -1;
     }
 }
