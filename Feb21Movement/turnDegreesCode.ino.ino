@@ -75,7 +75,7 @@ void turnDegrees(double degrees){
     float initialYaw = read_yaw();
     float targetYaw = initialYaw - degrees;
  
-    while(abs(read_yaw() - targetYaw) > .05){
+    while(abs(read_yaw() - targetYaw) > 2){
         // turning left
         digitalWrite(IN1_F, HIGH);
         digitalWrite(IN2_F, HIGH);
