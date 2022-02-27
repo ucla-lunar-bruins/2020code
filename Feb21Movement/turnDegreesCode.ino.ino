@@ -58,6 +58,18 @@ void setupMovement()
   pinMode(IN4_B, OUTPUT);
 }
 
+void stop(){
+   digitalWrite(IN1_F, LOW);
+   digitalWrite(IN2_F, LOW);
+   digitalWrite(IN3_F, LOW);
+   digitalWrite(IN4_F, LOW);
+
+   digitalWrite(IN1_B, LOW);
+   digitalWrite(IN2_B, LOW);
+   digitalWrite(IN3_B, LOW);
+   digitalWrite(IN4_B, LOW);
+}
+
 
 void turnDegrees(double degrees){
     float initialYaw = read_yaw();
@@ -89,7 +101,7 @@ void turnDegrees(double degrees){
 void setup() {
   Serial.begin(9600);
   setupMovement();
-  turnDegrees(90)
+  turnDegrees(90);
 }
 
 void loop () {}
