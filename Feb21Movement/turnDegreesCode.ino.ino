@@ -1,5 +1,7 @@
   #include <Arduino.h>
-
+  #include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
+#include <Wire.h>
 
 #define FORWARD 1
 #define BACKWARD -1
@@ -36,8 +38,52 @@
 #define COOLDOWN_TIME  200
 
 
+Adafruit_MPU6050 mpu;
 
 
+const int MPU = 0x68;
+float yaw = 0;
+float GyroZ, gyroAngleZ, GyroErrorZ;
+float elapsedTime, currentTime, previousTime;
+int c = 0;
+
+float read_yaw() {
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
+  previousTime = currentTime;
+
+  currentTime = millis();
+  elapsedTime = (currentTime - previousTime) / 1000;
+  
+  
+  GyroZ = (g.gyro.z);
+  
+  GyroZ = GyroZ;
+  //Serial.println(GyroZ);
+
+  yaw = yaw + GyroZ * elapsedTime;
+  //Serial.println(elapsedTime);
+  return yaw;
+}
+
+float calculate_IMU_error() {
+    while (c < 200) {
+        Wire.beginTransmission(MPU);
+        Wire.write(0x47);
+        Wire.requestFrom(MPU, 2, true);
+        
+        GyroZ = Wire.read() << 8 | Wire.read();
+
+        Serial.print(GyroZ);
+
+        GyroErrorZ = GyroErrorZ + (GyroZ);
+
+        c++;
+        delay(10);
+    }
+    GyroErrorZ = GyroErrorZ / 200;
+    return GyroErrorZ;
+}
 
 void setupMovement()
 {
@@ -68,23 +114,37 @@ void stop(){
    digitalWrite(IN2_B, LOW);
    digitalWrite(IN3_B, LOW);
    digitalWrite(IN4_B, LOW);
+
+    digitalWrite(ENA_F, LOW);
+        digitalWrite(ENA_B, LOW);
+        digitalWrite(ENB_F, LOW);
+        digitalWrite(ENB_B, LOW);
 }
 
 
 void turnDegrees(double degrees){
     float initialYaw = read_yaw();
     float targetYaw = initialYaw - degrees;
- 
-    while(abs(read_yaw() - targetYaw) > 2){
+    targetYaw = -1*targetYaw;
+    Serial.println("turnDegrees");
+    analogWrite(ENA_F, 128);
+        analogWrite(ENA_B, 128);
+        analogWrite(ENB_F, 128);
+        analogWrite(ENB_B, 128);
+    while(abs(((read_yaw()*180)/3.14) - targetYaw) > 2){
         // turning left
-        digitalWrite(IN1_F, HIGH);
+        Serial.print("Read Yaw: ");
+        Serial.println(((read_yaw()*180)/3.14));
+        Serial.print("Target Yaw: ");
+        Serial.println(targetYaw);
+        digitalWrite(IN1_F, LOW);
         digitalWrite(IN2_F, HIGH);
-        digitalWrite(IN3_F, LOW);
+        digitalWrite(IN3_F, HIGH);
         digitalWrite(IN4_F, LOW);
         
-        digitalWrite(IN1_B, HIGH);
+        digitalWrite(IN1_B, LOW);
         digitalWrite(IN2_B, HIGH);
-        digitalWrite(IN3_B, LOW);
+        digitalWrite(IN3_B, HIGH);
         digitalWrite(IN4_B, LOW);
     }
     stop();
@@ -98,10 +158,34 @@ void turnDegrees(double degrees){
     Serial.println(read_yaw());
 }
 
+
 void setup() {
+
+  if (!mpu.begin()) {
+    Serial.println("Failed to find MPU6050 chip");
+    while (1) {
+      delay(10);
+    }
+  }
+
+  mpu.setAccelerometerRange(MPU6050_RANGE_16_G);
+  mpu.setGyroRange(MPU6050_RANGE_250_DEG);
+  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+  Serial.println("");
+  delay(100);
+  
+  delay(1000);
   Serial.begin(9600);
+  Wire.begin();
+  Wire.beginTransmission(MPU);
+  Wire.write(0x6B);
+  Wire.write(0x00);
+  Wire.endTransmission(true);
+  calculate_IMU_error();
+  delay(1000);
   setupMovement();
-  turnDegrees(90);
+  turnDegrees(180);
 }
 
-void loop () {}
+void loop () {  
+  }
